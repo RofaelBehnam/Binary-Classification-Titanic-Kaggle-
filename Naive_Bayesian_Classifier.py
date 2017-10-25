@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from sklearn.metrics import f1_score, accuracy_score
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import LabelEncoder
 
@@ -23,9 +24,9 @@ test = test.rename(columns=lambda x: x.strip())
 test_labels = pd.read_csv('dataset/gender_submission.csv', sep=',')
 # remove extra spaces at the beginning and the end of column titles
 test_labels = test_labels.rename(columns=lambda x: x.strip())
+test_labels = test_labels.Survived
 # separate training labels from features
 train_labels = train.Survived
-
 train = train.drop('Survived', axis=1)
 
 # remove features that may be helpless
@@ -50,4 +51,8 @@ train = np.array(train.values.tolist())
 train_labels = np.array(train_labels.values.tolist())
 model = gaussian_NB.fit(train, train_labels)
 target_pred = model.predict(test)
-print np.array_equal(target_pred, test_labels)
+print 'F1-measure = ', f1_score(test_labels, target_pred)
+print 'Accuracy = ', accuracy_score(test_labels, target_pred) * 100.0, '%'
+
+# F1-measure=  0.625531914894
+# Accuracy =  57.8947368421 %
