@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import f1_score, accuracy_score
-from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -21,11 +22,9 @@ train = train.rename(columns=lambda x: x.strip())
 test = pd.read_csv('dataset/test.csv', sep=',')
 # remove extra spaces at the beginning and the end of column titles
 test = test.rename(columns=lambda x: x.strip())
-test_labels = pd.read_csv('dataset/gender_submission.csv', sep=',')
 # remove extra spaces at the beginning and the end of column titles
-test_labels = test_labels.rename(columns=lambda x: x.strip())
-test_labels = test_labels.Survived
 # separate training labels from features
+IDs = test.PassengerId
 train_labels = train.Survived
 train = train.drop('Survived', axis=1)
 
@@ -42,17 +41,20 @@ test = test.drop('Ticket', axis=1)
 #################################
 train = categorical_to_numeric(train)
 test = categorical_to_numeric(test)
-
-# # Initialize classifier
-gaussian_NB = GaussianNB()
-
-# Train classifier
 train = np.array(train.values.tolist())
 train_labels = np.array(train_labels.values.tolist())
-model = gaussian_NB.fit(train, train_labels)
-target_pred = model.predict(test)
-print 'F1-measure = ', f1_score(test_labels, target_pred)
-print 'Accuracy = ', accuracy_score(test_labels, target_pred) * 100.0, '%'
 
-# F1-measure=  0.625531914894
-# Accuracy =  57.8947368421 %
+classifiers = [GaussianNB(), MultinomialNB(), BernoulliNB(), LogisticRegression(), KNeighborsClassifier()]
+classifiers_name = ['Gaussian_NB', 'Multinomial_NB', 'Bernoulli_NB', 'Logistic_Regression', 'K_Neighbors']
+for classifier, name in zip(classifiers, classifiers_name):
+    f = open('results/using_standard_' + name + '_classifier.txt', 'w')
+    # print 'using ', name, ' classifier'
+    # Train classifier
+    model = classifier.fit(train, train_labels)
+    test_labels = classifier.predict(test)
+    result = [list(a) for a in zip(IDs, test_labels)]
+    f.write('PassengerId, Survived\r\n')
+    for i in range(len(result)):
+        f.write(str(result[i][0]) + ", " + str(int(result[i][1])) + "\r\n")
+    f.close()
+    # print '#################################'
